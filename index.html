@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>smallest subnet</title>
+    <style type="text/css">
+        * {
+            margin: 1em auto;
+            font-size: 1.1em;
+            text-align: center;
+            font-family: monospace;
+        }
+        #input {
+            margin: 1em;
+            padding: 10px;
+            line-height: 1.5em;
+            border: 2px solid #eee;
+            text-align: left;
+        }
+        #error {
+            color: rgb(93, 24, 24);
+        }
+        
+        #result {
+            margin: 1em;
+            font-size: 2em;
+        }
+        
+        button {
+            display: block;
+            margin: auto;
+            border-radius: 3px;
+            background-color: white;
+            padding: 10px 25px;
+            border: 2px solid #555;
+            text-transform: uppercase;
+        }
+    </style>
+    <script type="text/javascript">
+        function compute() {
+            let error = document.getElementById("error");
+            var content = document.getElementById("input").value.split(/\s+/).filter(s => s.length > 0);
+            console.log(content);
+            if (content.length < 1) {
+                error.textContent = "I need some IPs first.";
+                return;
+            }
+            if (!content.every(s => s.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/))) {
+                error.textContent = "Looks like invalid IP(s) to me.";
+                return;
+            }
+            error.textContent = "";
+            let result = document.getElementById("result");
+            result.textContent = cidr(content);
+        }
+    </script>
+  </head>
+  <body>
+    <p>Find the smallest subnet for a given list of IP addresses.</p>
+    <textarea id="input" rows="4" cols="50" placeholder="12.12.12.134&#10;12.12.153.5"></textarea>
+    <button onclick="compute()">smallest subnet</button>
+    <div id="result"></div>
+    <div id="error"></div>
+
+    <script type="text/javascript">
+      const toBits = (ip) =>
+        ip
+          .split(".")
+          .map((e) => parseInt(e).toString(2).padStart(8, "0"))
+          .join("");
+
+      const fromBits = (bits) =>
+        bits
+          .match(/.{8}/g)
+          .map((b) => parseInt(b, 2))
+          .join(".");
+
+      const allEqual = (arr) => arr.every((val) => val === arr[0]);
+
+      function cidr(ips) {
+        let bips = ips.map(toBits);
+        let mask = 0;
+        for (; mask < 32; mask++) {
+          if (!allEqual(bips.map((b) => b[mask]))) break;
+        }
+
+        let cidr_block = fromBits(bips[0].substr(0, mask).padEnd(32, 0));
+        return `${cidr_block}/${mask}`;
+      }
+    </script>
+  </body>
+</html>
